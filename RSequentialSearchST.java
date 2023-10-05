@@ -30,7 +30,7 @@ package hw2;
  */
 import java.util.LinkedList;
 
-public class SequentialSearchST<Key extends Comparable<Key>, Value> {
+public class RSequentialSearchST<Key extends Comparable<Key>, Value> {
     private int n;           // number of key-value pairs
     private Node first;      // the linked list of key-value pairs
 
@@ -50,7 +50,7 @@ public class SequentialSearchST<Key extends Comparable<Key>, Value> {
     /**
      * Initializes an empty symbol table.
      */
-    public SequentialSearchST() {
+    public RSequentialSearchST() {
     }
 
     /**
@@ -113,35 +113,30 @@ public class SequentialSearchST<Key extends Comparable<Key>, Value> {
      * @throws IllegalArgumentException if {@code key} is {@code null}
      */
     public Value get(Key key) {
-    	if (key == null) throw new IllegalArgumentException("Argument to get() is null");
-    	Node current = first;
-    	while(current != null) {
-    		int comparison = key.compareTo(current.key);
-    		if(comparison == 0) {
-    			return current.val;
-    		}
-    		else if(comparison < 0){
-    			break;
-    		}
-    		current = current.next;
-    	}
-    	return null;
-    }
     	// TODO
     	// Change this code to make use of the fact the list is sorted to terminate early
-    	// when possible.
-//        if (key == null) throw new IllegalArgumentException("argument to get() is null"); 
-//        for (Node x = first; x != null; x = x.next) {
-//        	if (key.equals(x.key)) {
-//        		return x.val;
-//        		}
-//        	if(x.key.compareTo(key) >= 0) {
-//        		break;
-//        	}
-//        }
-//        return null;
-//    }
+    	// when possible.  Also, solve this using recursion.  To do this, you will need to
+    	// add a recursive helper function that takes the front of a list (Node) as an argument
+    	// and returns the correct value.
+        if (key == null) {
+        	throw new IllegalArgumentException("Argument to get() is null");
+        }
+        return getH(first,key);
+    }
     
+    private Value getH(Node x, Key key) {
+    	if (x == null || key == null) {
+    		return null;
+    	}
+    	int comparison = key.compareTo(x.key);
+    	if(comparison == 0) {
+    		return x.val;
+    	}
+    	else if(comparison < 0) {
+    		return null;
+    	}
+    	return getH(x.next, key);
+    }
 
     /**
      * Inserts the specified key-value pair into the symbol table while maintaining the
@@ -155,35 +150,38 @@ public class SequentialSearchST<Key extends Comparable<Key>, Value> {
      */
     public void put(Key key, Value val) {
     	// TODO
-    	// Change this code to make sure the list remains sorted!
-        if (key == null) throw new IllegalArgumentException("first argument to put() is null");
-        
-        if (val == null) {
-            delete(key);
-            return;
+    	// Change this code to make sure the list remains sorted!  Also, solve this using recursion.
+    	// To do this, you will need to add a recursive helper function that takes the front of a
+    	// list (Node) as an argument and returns the front of the modified list (Node).
+        if (key == null) {
+        	throw new IllegalArgumentException("First argument to put() is null");
         }
-        
-        if (first == null || key.compareTo(first.key)< 0) {
-        	first = new Node(key, val,first);
-        	n++;
+        if (val == null) {
+        	delete(key);
         	return;
         }
-        Node current = first;
-        Node previous = null;
-        
-        while (current != null && key.compareTo(current.key) > 0) {
-        	previous = current;
-        	current = current.next;
-        }
-        if (current != null && key.equals(current.key)) {
-        	current.val = val;
-        }
-        else {
-        	previous.next = new Node(key, val, current);
-        	n++;
-        }
+        first = putH(first, key, val);
     }
-        
+
+    private Node putH(Node x, Key key, Value val) {
+    	if(x == null) {
+    		n++;
+    		return new Node(key, val, null);
+    	}
+    	int comparison = key.compareTo(x.key);
+    	
+    	if(comparison == 0) {
+    		x.val = val;
+    	}
+    	else if (comparison < 0) {
+    		n++;
+    		x = new Node(key, val, x);
+    	}
+    	else {
+    		x.next = putH(x.next, key, val);
+    	}
+    	return x;
+    }
     /**
      * Removes the specified key and its associated value from this symbol table     
      * (if the key is in this symbol table).  Takes advantage of the fact that the
@@ -196,46 +194,32 @@ public class SequentialSearchST<Key extends Comparable<Key>, Value> {
     	// TODO
     	// Change this code to make use of the fact that the list is sorted to
     	//     terminate early when possible.
-    	// Also use a loop instead of recursion!  So remove the recursive helper
-    	//     function below.
-        if (key == null) throw new IllegalArgumentException("Argument to delete() is null");
-        
-        Node current = first;
-        Node previous = null;
-        
-        while (current != null) {
-        	int comparison = key.compareTo(current.key);
-        	if(comparison == 0) {
-        		if (previous != null) {
-        			previous.next = current.next;
-        		}
-        		else {
-        			first = current.next;
-        		}
-        		n--;
-        		return;
-        	}
-        	else if (comparison < 0) {
-        		return;
-        	}
-        	previous = current;
-        	current = current.next;
-        }
+    	// As this code already uses recursion, the private helper function is
+    	// already present below, but it will need to be changed to terminate
+    	// early when appropriate.
+        if (key == null) throw new IllegalArgumentException("argument to delete() is null"); 
+        first = deleteH(first, key);
     }
 
     // delete key in linked list beginning at Node x
     // warning: function call stack too large if table is large
-    //private Node delete(Node x, Key key) {
+    private Node deleteH(Node x, Key key) {
     	// TODO
-    	// Remove this function.  Delete should no longer be recursive.
-        //if (x == null) return null;
-        //if (key.equals(x.key)) {
-        //   n--;
-        //    return x.next;
-        //}
-        //x.next = delete(x.next, key);
-        //return x;
-    //}
+    	// Modify this to terminate early when possible.
+    	if (x == null)
+    		return null;
+        int comparison = key.compareTo(x.key);
+        if(comparison == 0) {
+        	n--;
+        	return x.next;
+        }
+        else if(comparison < 0) {
+        	return x;
+        }
+        	
+        x.next = deleteH(x.next, key);
+        return x;
+    }
 }
 
 /******************************************************************************
